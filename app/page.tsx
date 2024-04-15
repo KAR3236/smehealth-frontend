@@ -1,113 +1,563 @@
-import Image from "next/image";
+"use client";
+import {
+  Button,
+  Checkbox,
+  CircularProgress,
+  FormControlLabel,
+  FormGroup,
+  Grid,
+  Paper,
+  TextField,
+} from "@mui/material";
+import { toast } from "react-toastify";
+import { useFormik } from "formik";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { smeHealthCheckValidation } from "./Validations/userValidation";
+import { useDispatch, useSelector } from "react-redux";
+import { hideLoader, showLoader } from "./Redux/Slice/loaderSlice";
+import { addHealthInfoAPI } from "./APIs/healthInfoAPIs";
+import { constant, statusCodeConstant } from "./Utils/constants";
+import AppBar from "@mui/material/AppBar";
+import Container from "@mui/material/Container";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import Stepper from "@mui/material/Stepper";
+import Step from "@mui/material/Step";
+import StepLabel from "@mui/material/StepLabel";
+import StepContent from "@mui/material/StepContent";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CheckIcon from "@mui/icons-material/Check";
+import { Form } from "./Components/Form";
+import {
+  HealthInfoDataInterface,
+  HealthInfoResponse,
+} from "./Utils/healthInfoInterface";
+import { AxiosResponse } from "axios";
 
 export default function Home() {
+  const navigate = useRouter();
+
+  //Redux
+  const dispatch = useDispatch();
+  const {
+    loader,
+  }: {
+    loader: boolean;
+  } = useSelector((state: any) => state?.loader);
+
+  // Formik for validation and handle event by user
+  const formik = useFormik<HealthInfoDataInterface>({
+    initialValues: {
+      company_uen: "",
+      company_name: "",
+      full_name: "",
+      company_position: "",
+      email: "",
+      re_enter_email: "",
+      mobile_no: "",
+      file: null,
+      terms_condition: false,
+    },
+    validationSchema: smeHealthCheckValidation,
+    onSubmit: (values: HealthInfoDataInterface) => {
+      dispatch(showLoader());
+      addHealthInfoAPI(values)
+        .then((healthInfoData: AxiosResponse<HealthInfoResponse>) => {
+          if (healthInfoData?.data?.statusCode === statusCodeConstant.CREATED) {
+            toast.success(healthInfoData?.data?.message);
+            navigate.push("/listOfHealthInfo");
+          } else {
+            toast.error(healthInfoData?.data?.message);
+          }
+        })
+        .catch((error: any) => {
+          if (
+            error.response?.data?.statusCode === statusCodeConstant.BAD_REQUEST
+          ) {
+            toast.error(error?.response?.data?.message[0]);
+          } else {
+            toast.error(error?.response?.data?.message);
+          }
+        })
+        .finally(() => {
+          dispatch(hideLoader());
+        });
+    },
+  });
+
+  const steps: {
+    label: string;
+  }[] = [
+    {
+      label: "Company Information",
+    },
+    {
+      label: "Applicant Information",
+    },
+    {
+      label: "Upload Documents",
+    },
+    {
+      label: "Terms & Conditions",
+    },
+  ];
+
+  const [activeStep, setActiveStep] = useState<number>(0);
+
+  const handleNext = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
+  
+  const handleUploadClick = () => {
+    formik.setFieldTouched("file", true);
+  };  
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <>
+      <AppBar position="static">
+        <Container maxWidth="xl">
+          <Toolbar
+            disableGutters
+            sx={{
+              color: "white",
+            }}
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+            <Typography
+              variant="h5"
+              noWrap
+              sx={{
+                flexGrow: 1,
+                display: { xs: "none", md: "flex" },
+              }}
+            >
+              LOGO
+            </Typography>
+            <Typography variant="h5" noWrap>
+              SME HealthCheck - Get Started
+            </Typography>
+          </Toolbar>
+        </Container>
+      </AppBar>
+      <Paper
+        sx={{
+          p: 2,
+          margin: "auto",
+          maxWidth: 900,
+          flexGrow: 1,
+        }}
+      >
+        <Form onSubmit={formik.handleSubmit}>
+          <Stepper activeStep={activeStep} orientation="vertical">
+            {steps.map((step, index) => (
+              <Step key={step.label}>
+                <StepLabel
+                  optional={
+                    index === 3 ? (
+                      <Typography variant="caption">Last step</Typography>
+                    ) : null
+                  }
+                >
+                  <b>{step.label}</b>
+                </StepLabel>
+                <StepContent>
+                  <Grid
+                    container
+                    spacing={2}
+                    justifyContent="center"
+                    alignItems="center"
+                  >
+                    {index === 0 ? (
+                      <>
+                        <Grid item xs={6}>
+                          <TextField
+                            id={constant.COMPANYUEN}
+                            label={constant.COMPANYUEN}
+                            name="company_uen"
+                            type="text"
+                            placeholder="14253614H"
+                            value={formik?.values?.company_uen}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+                          {formik?.touched?.company_uen &&
+                          formik?.errors?.company_uen ? (
+                            <small>
+                              <div
+                                style={{
+                                  color: "red",
+                                  paddingLeft: 10,
+                                  paddingBottom: 10,
+                                }}
+                              >
+                                {formik?.errors?.company_uen}
+                              </div>
+                            </small>
+                          ) : null}
+                        </Grid>
+                        <Grid item xs={6}>
+                          <TextField
+                            id={constant.COMPANYNAME}
+                            label={constant.COMPANYNAME}
+                            name="company_name"
+                            type="text"
+                            placeholder="Amazon"
+                            value={formik?.values?.company_name}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+                          {formik?.touched?.company_name &&
+                          formik?.errors?.company_name ? (
+                            <small>
+                              <div
+                                style={{
+                                  color: "red",
+                                  paddingLeft: 10,
+                                  paddingBottom: 10,
+                                }}
+                              >
+                                {formik?.errors?.company_name}
+                              </div>
+                            </small>
+                          ) : null}
+                        </Grid>
+                      </>
+                    ) : index === 1 ? (
+                      <>
+                        <Grid item xs={6}>
+                          <TextField
+                            id={constant.FULL_NAME}
+                            label={constant.FULL_NAME}
+                            name="full_name"
+                            type="text"
+                            value={formik?.values?.full_name}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+                          {formik?.touched?.full_name &&
+                          formik?.errors?.full_name ? (
+                            <small>
+                              <div
+                                style={{
+                                  color: "red",
+                                  paddingLeft: 10,
+                                  paddingBottom: 10,
+                                }}
+                              >
+                                {formik?.errors?.full_name}
+                              </div>
+                            </small>
+                          ) : null}
+                        </Grid>
+                        <Grid item xs={6}>
+                          <TextField
+                            id={constant.COMPANY_POSITION}
+                            label={constant.COMPANY_POSITION}
+                            name="company_position"
+                            type="text"
+                            value={formik?.values?.company_position}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+                          {formik?.touched?.company_position &&
+                          formik?.errors?.company_position ? (
+                            <small>
+                              <div
+                                style={{
+                                  color: "red",
+                                  paddingLeft: 10,
+                                  paddingBottom: 10,
+                                }}
+                              >
+                                {formik?.errors?.company_position}
+                              </div>
+                            </small>
+                          ) : null}
+                        </Grid>
+                        <Grid item xs={6}>
+                          <TextField
+                            id={constant.EMAIL}
+                            label={constant.EMAIL}
+                            name="email"
+                            type="email"
+                            value={formik?.values?.email}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+                          {formik?.touched?.email && formik?.errors?.email ? (
+                            <small>
+                              <div
+                                style={{
+                                  color: "red",
+                                  paddingLeft: 10,
+                                  paddingBottom: 10,
+                                }}
+                              >
+                                {formik?.errors?.email}
+                              </div>
+                            </small>
+                          ) : null}
+                        </Grid>
+                        <Grid item xs={6}>
+                          <TextField
+                            id={constant.RE_ENTER_EMAIL}
+                            label={constant.RE_ENTER_EMAIL}
+                            name="re_enter_email"
+                            type={constant.EMAIL.toLowerCase()}
+                            value={formik?.values?.re_enter_email}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+                          {formik?.touched?.re_enter_email &&
+                          formik?.errors?.re_enter_email ? (
+                            <small>
+                              <div
+                                style={{
+                                  color: "red",
+                                  paddingLeft: 10,
+                                  paddingBottom: 10,
+                                }}
+                              >
+                                {formik?.errors?.re_enter_email}
+                              </div>
+                            </small>
+                          ) : null}
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TextField
+                            id={constant.MOBILE_NO}
+                            label={constant.MOBILE_NO}
+                            name="mobile_no"
+                            type="text"
+                            value={formik?.values?.mobile_no}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+                          {formik?.touched?.mobile_no &&
+                          formik?.errors?.mobile_no ? (
+                            <small>
+                              <div
+                                style={{
+                                  color: "red",
+                                  paddingLeft: 10,
+                                  paddingBottom: 10,
+                                }}
+                              >
+                                {formik?.errors?.mobile_no}
+                              </div>
+                            </small>
+                          ) : null}
+                        </Grid>
+                      </>
+                    ) : index === 2 ? (
+                      <>
+                        <Grid item xs={6}>
+                          <Button
+                            component="label"
+                            role={undefined}
+                            variant="contained"
+                            tabIndex={-1}
+                            startIcon={<CloudUploadIcon />}
+                            onClick={handleUploadClick}
+                          >
+                            Upload file
+                            <input
+                              type="file"
+                              name="file"
+                              style={{ display: "none" }}
+                              accept="application/pdf"
+                              onChange={(event: any) => {
+                                formik.setFieldValue(
+                                  "file",
+                                  event.target.files[0]
+                                );
+                              }}
+                              onBlur={formik.handleBlur}
+                            />
+                          </Button>
+                          {formik?.touched?.file && formik?.errors?.file ? (
+                            <small>
+                              <div
+                                style={{
+                                  color: "red",
+                                  paddingLeft: 10,
+                                  paddingBottom: 10,
+                                }}
+                              >
+                                {formik?.errors?.file}
+                              </div>
+                            </small>
+                          ) : null}
+                        </Grid>
+                        <Grid item xs={1}>
+                          <CheckIcon />
+                        </Grid>
+                        <Grid item xs={5}>
+                          PDFs (not scanned copies) of company&apos;s operating
+                          bank current account(s) statements for the past 6
+                          months. Example: If today is 09 Apr 24, then please
+                          upload bank statements from Oct 23 to Mar 24 (both
+                          months inclusive)
+                        </Grid>
+                        <Grid item xs={6}></Grid>
+                        <Grid item xs={1}>
+                          <CheckIcon />
+                        </Grid>
+                        <Grid item xs={5}>
+                          If your company is multi-banked, then please upload 6
+                          months bank statements for each bank account
+                        </Grid>
+                        <Grid item xs={6}></Grid>
+                        <Grid item xs={1}>
+                          <CheckIcon />
+                        </Grid>
+                        <Grid item xs={5}>
+                          If your file is password protected, we request you to
+                          remove the password and upload the file to avoid
+                          submission failure
+                        </Grid>
+                        <Grid item xs={6}></Grid>
+                        <Grid item xs={1}>
+                          <CheckIcon />
+                        </Grid>
+                        <Grid item xs={5}>
+                          In case if you are facing any issue while uploading
+                          bank statements, Please contact us on
+                          support@credilinq.ai
+                        </Grid>
+                      </>
+                    ) : (
+                      <>
+                        <Grid item xs={12}>
+                          <FormGroup>
+                            <FormControlLabel
+                              required
+                              control={
+                                <Checkbox
+                                  name="terms_condition"
+                                  value={formik?.values?.terms_condition}
+                                  onBlur={formik.handleBlur}
+                                  onChange={formik.handleChange}
+                                />
+                              }
+                              label="By ticking, you are confirming that you have understood and are agreeing to the details mentioned:"
+                            />
+                          </FormGroup>
+                          {formik?.touched?.terms_condition &&
+                          formik?.errors?.terms_condition ? (
+                            <small>
+                              <div
+                                style={{
+                                  color: "red",
+                                  paddingLeft: 10,
+                                  paddingBottom: 10,
+                                }}
+                              >
+                                {formik?.errors?.terms_condition}
+                              </div>
+                            </small>
+                          ) : null}
+                        </Grid>
+                        <Grid item xs={1}>
+                          <CheckIcon />
+                        </Grid>
+                        <Grid item xs={11}>
+                          I confirm that I am the authorized person to upload
+                          bank statements on behalf of my company
+                        </Grid>
+                        <Grid item xs={1}>
+                          <CheckIcon />
+                        </Grid>
+                        <Grid item xs={11}>
+                          I assure you that uploaded bank statements and
+                          provided company information match and are of the same
+                          company, if there is a mismatch then my report will
+                          not be generated
+                        </Grid>
+                        <Grid item xs={1}>
+                          <CheckIcon />
+                        </Grid>
+                        <Grid item xs={11}>
+                          I understand that this is a general report based on
+                          the bank statements and Credilinq is not providing a
+                          solution or guiding me for my business growth
+                        </Grid>
+                        <Grid item xs={1}>
+                          <CheckIcon />
+                        </Grid>
+                        <Grid item xs={11}>
+                          I have read and understand the Terms & Conditions
+                        </Grid>
+                      </>
+                    )}
+                  </Grid>
+                  <Box sx={{ mb: 2, ml: 1 }}>
+                    <div>
+                      <Button
+                        disabled={
+                          index === 0 &&
+                          formik?.values.company_uen &&
+                          formik?.values.company_name
+                            ? false
+                            : index === 1 &&
+                              formik?.values.full_name &&
+                              formik?.values.company_position &&
+                              formik?.values.email &&
+                              formik?.values.mobile_no
+                            ? false
+                            : index === 2 && formik?.values.file
+                            ? false
+                            : index === 3 &&
+                              (formik?.values.terms_condition ||
+                                formik?.values.terms_condition === undefined)
+                            ? false
+                            : true
+                        }
+                        type={
+                          index === 3 &&
+                          (formik?.values.terms_condition ||
+                            formik?.values.terms_condition === undefined)
+                            ? "submit"
+                            : "button"
+                        }
+                        variant="contained"
+                        onClick={
+                          index === 3 &&
+                          (formik?.values.terms_condition ||
+                            formik?.values.terms_condition === undefined)
+                            ? () => formik.handleSubmit
+                            : handleNext
+                        }
+                        sx={{ mt: 1, mr: 1 }}
+                      >
+                        {loader ? (
+                          <CircularProgress size={25} />
+                        ) : index === steps.length - 1 ? (
+                          "Submit"
+                        ) : (
+                          "Continue"
+                        )}
+                      </Button>
+                      <Button
+                        disabled={index === 0}
+                        onClick={handleBack}
+                        sx={{ mt: 1, mr: 1 }}
+                      >
+                        Back
+                      </Button>
+                    </div>
+                  </Box>
+                </StepContent>
+              </Step>
+            ))}
+          </Stepper>
+        </Form>
+      </Paper>
+    </>
   );
 }
