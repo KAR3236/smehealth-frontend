@@ -440,7 +440,7 @@ export default function Home() {
                               control={
                                 <Checkbox
                                   name="terms_condition"
-                                  value={formik?.values?.terms_condition}
+                                  checked={formik?.values?.terms_condition}
                                   onBlur={formik.handleBlur}
                                   onChange={formik.handleChange}
                                 />
