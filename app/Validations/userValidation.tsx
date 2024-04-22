@@ -17,10 +17,15 @@ export const smeHealthCheckValidation = Yup.object({
     .required(),
   mobile_no: Yup.string().min(10).required("Mobile Number is a required field"),
   file: Yup.mixed()
-    .required("Please upload a file")
+    .required("Please upload a files")
+    .test("fileType", "Only PDF files is allowed", (values: any) => {
+      return values.every((value: any) => value.type === "application/pdf");
+    }),
+  terms_condition: Yup.boolean()
     .test(
-      "fileType",
-      "Only PDF file is allowed",
-      (value: any) => value && value.type === "application/pdf"
-    ),
+      "terms_condition",
+      "Terms and Conditions is a required field",
+      (value: any) => value === true
+    )
+    .required("Terms and Conditions is a required field"),
 });

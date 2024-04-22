@@ -12,7 +12,7 @@ import {
 import { toast } from "react-toastify";
 import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { smeHealthCheckValidation } from "./Validations/userValidation";
 import { useDispatch, useSelector } from "react-redux";
 import { hideLoader, showLoader } from "./Redux/Slice/loaderSlice";
@@ -61,7 +61,7 @@ export default function Home() {
       terms_condition: false,
     },
     validationSchema: smeHealthCheckValidation,
-    onSubmit: (values: HealthInfoDataInterface) => {
+    onSubmit: (values: HealthInfoDataInterface) => {     
       dispatch(showLoader());
       addHealthInfoAPI(values)
         .then((healthInfoData: AxiosResponse<HealthInfoResponse>) => {
@@ -72,7 +72,7 @@ export default function Home() {
             toast.error(healthInfoData?.data?.message);
           }
         })
-        .catch((error: any) => {
+        .catch((error: any) => {        
           if (
             error.response?.data?.statusCode === statusCodeConstant.BAD_REQUEST
           ) {
@@ -105,18 +105,31 @@ export default function Home() {
   ];
 
   const [activeStep, setActiveStep] = useState<number>(0);
+  useEffect(() => {
+    const isStep1 = !formik.errors.company_uen && !formik.errors.company_name;
+    const isStep2 =
+      !formik.errors.full_name &&
+      !formik.errors.company_position &&
+      !formik.errors.email &&
+      !formik.errors.re_enter_email &&
+      !formik.errors.mobile_no;
+    const isStep3 = !formik.errors.file;
+    const isStep4 = !formik.errors.terms_condition;
 
-  const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
-  };
+    if (!isStep1) {
+      setActiveStep(0);
+    } else if (!isStep2) {
+      setActiveStep(1);
+    } else if (!isStep3) {
+      setActiveStep(2);
+    } else if (!isStep4) {
+      setActiveStep(3);
+    }
+  }, [formik.errors]);
 
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
-  
   const handleUploadClick = () => {
     formik.setFieldTouched("file", true);
-  };  
+  };
 
   return (
     <>
@@ -155,7 +168,7 @@ export default function Home() {
         <Form onSubmit={formik.handleSubmit}>
           <Stepper activeStep={activeStep} orientation="vertical">
             {steps.map((step, index) => (
-              <Step key={step.label}>
+              <Step key={step.label} expanded>
                 <StepLabel
                   optional={
                     index === 3 ? (
@@ -235,6 +248,9 @@ export default function Home() {
                             label={constant.FULL_NAME}
                             name="full_name"
                             type="text"
+                            disabled={
+                              activeStep === 1 || activeStep > 1 ? false : true
+                            }
                             value={formik?.values?.full_name}
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
@@ -260,6 +276,9 @@ export default function Home() {
                             label={constant.COMPANY_POSITION}
                             name="company_position"
                             type="text"
+                            disabled={
+                              activeStep === 1 || activeStep > 1 ? false : true
+                            }
                             value={formik?.values?.company_position}
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
@@ -285,6 +304,9 @@ export default function Home() {
                             label={constant.EMAIL}
                             name="email"
                             type="email"
+                            disabled={
+                              activeStep === 1 || activeStep > 1 ? false : true
+                            }
                             value={formik?.values?.email}
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
@@ -308,6 +330,9 @@ export default function Home() {
                             id={constant.RE_ENTER_EMAIL}
                             label={constant.RE_ENTER_EMAIL}
                             name="re_enter_email"
+                            disabled={
+                              activeStep === 1 || activeStep > 1 ? false : true
+                            }
                             type={constant.EMAIL.toLowerCase()}
                             value={formik?.values?.re_enter_email}
                             onBlur={formik.handleBlur}
@@ -334,6 +359,9 @@ export default function Home() {
                             label={constant.MOBILE_NO}
                             name="mobile_no"
                             type="text"
+                            disabled={
+                              activeStep === 1 || activeStep > 1 ? false : true
+                            }
                             value={formik?.values?.mobile_no}
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
@@ -362,6 +390,9 @@ export default function Home() {
                             role={undefined}
                             variant="contained"
                             tabIndex={-1}
+                            disabled={
+                              activeStep === 2 || activeStep > 2 ? false : true
+                            }
                             startIcon={<CloudUploadIcon />}
                             onClick={handleUploadClick}
                           >
@@ -371,11 +402,16 @@ export default function Home() {
                               name="file"
                               style={{ display: "none" }}
                               accept="application/pdf"
+                              multiple
                               onChange={(event: any) => {
-                                formik.setFieldValue(
-                                  "file",
-                                  event.target.files[0]
-                                );
+                                const files = event.target.files;
+                                if (files.length > 6) {
+                                  event.target.value = null;
+                                  alert("Only up to 6 files are allowed.");
+                                } else {
+                                  const fileList = Array.from(files);
+                                  formik.setFieldValue("file", fileList);
+                                }
                               }}
                               onBlur={formik.handleBlur}
                             />
@@ -441,6 +477,7 @@ export default function Home() {
                                 <Checkbox
                                   name="terms_condition"
                                   checked={formik?.values?.terms_condition}
+                                  disabled={activeStep === 3 ? false : true}
                                   onBlur={formik.handleBlur}
                                   onChange={formik.handleChange}
                                 />
@@ -496,65 +533,30 @@ export default function Home() {
                       </>
                     )}
                   </Grid>
-                  <Box sx={{ mb: 2, ml: 1 }}>
-                    <div>
-                      <Button
-                        disabled={
-                          index === 0 &&
-                          formik?.values.company_uen &&
-                          formik?.values.company_name
-                            ? false
-                            : index === 1 &&
-                              formik?.values.full_name &&
-                              formik?.values.company_position &&
-                              formik?.values.email &&
-                              formik?.values.mobile_no
-                            ? false
-                            : index === 2 && formik?.values.file
-                            ? false
-                            : index === 3 &&
-                              (formik?.values.terms_condition ||
-                                formik?.values.terms_condition === undefined)
-                            ? false
-                            : true
-                        }
-                        type={
-                          index === 3 &&
-                          (formik?.values.terms_condition ||
-                            formik?.values.terms_condition === undefined)
-                            ? "submit"
-                            : "button"
-                        }
-                        variant="contained"
-                        onClick={
-                          index === 3 &&
-                          (formik?.values.terms_condition ||
-                            formik?.values.terms_condition === undefined)
-                            ? () => formik.handleSubmit
-                            : handleNext
-                        }
-                        sx={{ mt: 1, mr: 1 }}
-                      >
-                        {loader ? (
-                          <CircularProgress size={25} />
-                        ) : index === steps.length - 1 ? (
-                          "Submit"
-                        ) : (
-                          "Continue"
-                        )}
-                      </Button>
-                      <Button
-                        disabled={index === 0}
-                        onClick={handleBack}
-                        sx={{ mt: 1, mr: 1 }}
-                      >
-                        Back
-                      </Button>
-                    </div>
-                  </Box>
                 </StepContent>
               </Step>
             ))}
+            <Box sx={{ mb: 2, ml: 1 }}>
+              {loader ? (
+                <CircularProgress size={25} />
+              ) : formik?.values.terms_condition ||
+                formik?.values.terms_condition === undefined ? (
+                <Button
+                  disabled={
+                    formik?.values.terms_condition ||
+                    formik?.values.terms_condition === undefined
+                      ? false
+                      : true
+                  }
+                  type="submit"
+                  variant="contained"
+                  sx={{ mt: 1, mr: 1 }}
+                  onClick={() => formik.handleSubmit}
+                >
+                  Submit
+                </Button>
+              ) : null}
+            </Box>
           </Stepper>
         </Form>
       </Paper>
