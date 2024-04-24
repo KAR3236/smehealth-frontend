@@ -81,11 +81,11 @@ export default function ViewPdfFiles() {
           </h1>
         </Grid>
         {datas.map((data: any, index: number) => (
-          <Grid item xs={4} key={index} style={{ paddingBottom: 20 }}>
+          <Grid item xs={6} key={index} style={{ paddingBottom: 20 }}>
             <iframe
               src={`http://localhost:5000/${data.file}`}
               title="PDF"
-              width="90%"
+              width="95%"
               height="500"
             />
           </Grid>
