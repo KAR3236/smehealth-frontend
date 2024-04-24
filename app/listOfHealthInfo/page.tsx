@@ -48,7 +48,7 @@ export default function Dashboard() {
     fetchHealthInfoDataFromApi();
   }, []);
 
-  const handleLogout = () => {
+  const handleBack = () => {
     const confirm: boolean = window.confirm("Are you sure you want to back?");
     if (confirm) {
       navigate.push("/");
@@ -96,10 +96,13 @@ export default function Dashboard() {
             className="bg-sky-500 hover:bg-sky-700"
             style={{ padding: 8 }}
             href={{
-              pathname: `${URL}${params.row.file}`,
+              pathname: `/viewPdfFiles`,
+              query: {
+                id: params.row.id,
+              },
             }}
           >
-            View PDF
+            View PDFs
           </Link>
         </React.Fragment>,
       ],
@@ -153,7 +156,7 @@ export default function Dashboard() {
             style={{
               color: "black",
             }}
-            onClick={handleLogout}
+            onClick={handleBack}
             type="button"
           >
             {constant.BACK}

@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 export const healthInfoSlice = createSlice({
-  name: "blog",
+  name: "healthInfo",
   initialState: {
     datas: [],
     loader: false,
@@ -10,10 +10,13 @@ export const healthInfoSlice = createSlice({
     listOfHealthInfo: (state, action) => {
       return { ...state, datas: action.payload };
     },
+    listOfHealthInfoPdf: (state, action) => {
+      return { ...state, datas: action.payload };
+    },
   },
 });
 
 // Action creators are generated for each case reducer function
-export const { listOfHealthInfo } = healthInfoSlice.actions;
+export const { listOfHealthInfo, listOfHealthInfoPdf } = healthInfoSlice.actions;
 
 export default healthInfoSlice.reducer;

@@ -1,5 +1,5 @@
 import { HealthInfoDataInterface } from "../Utils/healthInfoInterface";
-import { ADD_HEALTH_INFO } from "./APIs";
+import { ADD_HEALTH_INFO, HEALTH_INFO_PDF } from "./APIs";
 import { baseURL } from "./baseUrl";
 
 export async function addHealthInfoAPI(data: HealthInfoDataInterface) {
@@ -29,4 +29,8 @@ export async function addHealthInfoAPI(data: HealthInfoDataInterface) {
 
 export async function listOfHealthInfoAPI() {
   return await baseURL.get(ADD_HEALTH_INFO);
+}
+
+export async function viewHealthInfoPdfAPI(id: string | null) {
+  return await baseURL.get(`${HEALTH_INFO_PDF}/${id}`);
 }
