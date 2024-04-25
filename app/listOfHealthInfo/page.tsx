@@ -1,17 +1,22 @@
 "use client";
 import Box from "@mui/material/Box";
-import { DataGrid, GridCellParams, GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridCellParams,
+  GridColDef,
+  GridPaginationModel,
+  GridSortModel,
+} from "@mui/x-data-grid";
 import { Button, CircularProgress, Grid, Paper } from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { listOfHealthInfo } from "../Redux/Slice/healthInfo";
 import { listOfHealthInfoAPI } from "../APIs/healthInfoAPIs";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { constant, statusCodeConstant } from "../Utils/constants";
 import { hideLoader, showLoader } from "../Redux/Slice/loaderSlice";
-import { URL } from "../APIs/baseUrl";
 import { HealthInfoResponse } from "../Utils/healthInfoInterface";
 import { AxiosResponse } from "axios";
 
@@ -26,8 +31,35 @@ export default function Dashboard() {
   } = useSelector((state: any) => state?.loader);
   const { datas } = useSelector((state: any) => state?.healthInfo);
 
-  const fetchHealthInfoDataFromApi = () => {
-    listOfHealthInfoAPI()
+  const [fieldModel, setFieldModel] = useState("");
+  const [orderModel, setOrderModel] = useState<string | null>("");
+  const [pageModel, setPageModel] = useState<number>(0);
+  const [pageSizeModel, setPageSizeModel] = useState<number>(5);
+
+  const handlePaginationModelChange = (model: GridPaginationModel) => {
+    setPageModel(model.page);
+    setPageSizeModel(model.pageSize);
+    fetchHealthInfoDataFromApi(model.page, model.pageSize);
+  };
+
+  const handleSortModelChange = (model: GridSortModel) => {
+    setFieldModel(model[0]?.field !== undefined ? model[0].field : "");
+    setOrderModel(model[0]?.sort !== undefined ? model[0].sort : "");
+    fetchHealthInfoDataFromApi(
+      pageModel,
+      pageSizeModel,
+      model[0].field,
+      model[0].sort !== undefined ? model[0].sort : ""
+    );
+  };
+
+  const fetchHealthInfoDataFromApi = (
+    page: number,
+    pageSize: number,
+    field?: string,
+    sort?: string | null
+  ) => {
+    listOfHealthInfoAPI(page, pageSize, field, sort)
       .then((listOfHealthInfoData: AxiosResponse<HealthInfoResponse>) => {
         if (
           listOfHealthInfoData?.data?.statusCode === statusCodeConstant.SUCCESS
@@ -45,7 +77,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     dispatch(showLoader());
-    fetchHealthInfoDataFromApi();
+    fetchHealthInfoDataFromApi(
+      pageModel,
+      pageSizeModel,
+      fieldModel,
+      orderModel
+    );
   }, []);
 
   const handleBack = () => {
@@ -146,6 +183,13 @@ export default function Dashboard() {
                 rows={datas}
                 columns={columns}
                 pageSizeOptions={[5, 10, 30, 50, 100]}
+                paginationMode="server"
+                sortingMode="server"
+                filterMode="server"
+                rowCount={6}
+                onSortModelChange={handleSortModelChange}
+                onPaginationModelChange={handlePaginationModelChange}
+                paginationModel={{ page: pageModel, pageSize: pageSizeModel }}
               />
             </Box>
           )}

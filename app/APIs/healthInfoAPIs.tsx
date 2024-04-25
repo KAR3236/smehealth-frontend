@@ -27,8 +27,20 @@ export async function addHealthInfoAPI(data: HealthInfoDataInterface) {
   });
 }
 
-export async function listOfHealthInfoAPI() {
-  return await baseURL.get(ADD_HEALTH_INFO);
+export async function listOfHealthInfoAPI(
+  page: number,
+  pageSize: number,
+  field: string | undefined,
+  sort: string | undefined | null
+) {
+  return await baseURL.get(ADD_HEALTH_INFO, {
+    params: {
+      take: pageSize,
+      skip: page * pageSize,
+      orderfield: field,
+      order: sort,
+    },
+  });
 }
 
 export async function viewHealthInfoPdfAPI(id: string | null) {
