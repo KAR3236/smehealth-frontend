@@ -48,8 +48,8 @@ export default function Dashboard() {
     fetchHealthInfoDataFromApi(
       pageModel,
       pageSizeModel,
-      model[0].field,
-      model[0].sort !== undefined ? model[0].sort : ""
+      model[0]?.field !== undefined ? model[0].field : "",
+      model[0]?.sort !== undefined ? model[0].sort : ""
     );
   };
 
