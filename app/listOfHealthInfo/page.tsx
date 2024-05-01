@@ -9,7 +9,6 @@ import {
 } from "@mui/x-data-grid";
 import { Button, CircularProgress, Grid, Paper } from "@mui/material";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { listOfHealthInfo } from "../Redux/Slice/healthInfo";
 import { listOfHealthInfoAPI } from "../APIs/healthInfoAPIs";
@@ -21,7 +20,6 @@ import { HealthInfoResponse } from "../Utils/healthInfoInterface";
 import { AxiosResponse } from "axios";
 
 export default function Dashboard() {
-  const navigate = useRouter();
   //Redux
   const dispatch = useDispatch();
   const {
@@ -84,13 +82,6 @@ export default function Dashboard() {
       orderModel
     );
   }, []);
-
-  const handleBack = () => {
-    const confirm: boolean = window.confirm("Are you sure you want to back?");
-    if (confirm) {
-      navigate.push("/");
-    }
-  };
 
   let columns: GridColDef[] = [
     {
@@ -195,16 +186,18 @@ export default function Dashboard() {
           )}
         </Grid>
         <Grid>
-          <Button
-            variant="contained"
-            style={{
-              color: "black",
-            }}
-            onClick={handleBack}
-            type="button"
-          >
-            {constant.BACK}
-          </Button>
+          <Link href="/">
+            <Button
+              variant="contained"
+              style={{
+                color: "black",
+              }}
+              // onClick={handleBack}
+              type="button"
+            >
+              {constant.BACK}
+            </Button>
+          </Link>
         </Grid>
       </Grid>
     </Paper>

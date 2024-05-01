@@ -1,12 +1,8 @@
 "use client";
 import { Button, Grid, Paper } from "@mui/material";
-import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { listOfHealthInfoPdf } from "../Redux/Slice/healthInfo";
-import {
-  listOfHealthInfoAPI,
-  viewHealthInfoPdfAPI,
-} from "../APIs/healthInfoAPIs";
+import { viewHealthInfoPdfAPI } from "../APIs/healthInfoAPIs";
 import React, { useEffect } from "react";
 import { toast } from "react-toastify";
 import { constant, statusCodeConstant } from "../Utils/constants";
@@ -14,11 +10,11 @@ import { hideLoader, showLoader } from "../Redux/Slice/loaderSlice";
 import { HealthInfoResponse } from "../Utils/healthInfoInterface";
 import { AxiosResponse } from "axios";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 export default function ViewPdfFiles() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-  const navigate = useRouter();
   //Redux
   const dispatch = useDispatch();
   const {
@@ -49,13 +45,6 @@ export default function ViewPdfFiles() {
     dispatch(showLoader());
     fetchHealthInfoPdfFromApi();
   }, []);
-
-  const handleBack = () => {
-    const confirm: boolean = window.confirm("Are you sure you want to back?");
-    if (confirm) {
-      navigate.push("/listOfHealthInfo");
-    }
-  };
 
   return (
     <Paper
@@ -99,16 +88,17 @@ export default function ViewPdfFiles() {
             justifyContent: "center",
           }}
         >
-          <Button
-            variant="contained"
-            style={{
-              color: "black",
-            }}
-            onClick={handleBack}
-            type="button"
-          >
-            {constant.BACK}
-          </Button>
+          <Link href="/dashboard">
+            <Button
+              variant="contained"
+              style={{
+                color: "black",
+              }}
+              type="button"
+            >
+              {constant.BACK}
+            </Button>
+          </Link>
         </Grid>
       </Grid>
     </Paper>
