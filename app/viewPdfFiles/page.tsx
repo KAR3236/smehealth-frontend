@@ -1,5 +1,5 @@
 "use client";
-import { Button, Grid, Paper } from "@mui/material";
+import { Box, Button, CircularProgress, Grid, Paper } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { listOfHealthInfoPdf } from "../Redux/Slice/healthInfo";
 import { viewHealthInfoPdfAPI } from "../APIs/healthInfoAPIs";
@@ -69,16 +69,25 @@ export default function ViewPdfFiles() {
             SME Health Care PDFs
           </h1>
         </Grid>
-        {datas.map((data: any, index: number) => (
-          <Grid item xs={6} key={index} style={{ paddingBottom: 20 }}>
-            <iframe
-              src={`http://localhost:5000/${data.file}`}
-              title="PDF"
-              width="95%"
-              height="500"
-            />
-          </Grid>
-        ))}
+        {loader ? (
+          <Box
+            sx={{ height: 400, width: "100%" }}
+            style={{ textAlign: "center" }}
+          >
+            <CircularProgress size={25} />
+          </Box>
+        ) : (
+          datas.map((data: any, index: number) => (
+            <Grid item xs={6} key={index} style={{ paddingBottom: 20 }}>
+              <iframe
+                src={`http://localhost:5000/${data.file}`}
+                title="PDF"
+                width="95%"
+                height="500"
+              />
+            </Grid>
+          ))
+        )}
         <Grid
           item
           xs={12}
@@ -88,7 +97,7 @@ export default function ViewPdfFiles() {
             justifyContent: "center",
           }}
         >
-          <Link href="/dashboard">
+          <Link href="/listOfHealthInfo">
             <Button
               variant="contained"
               style={{
